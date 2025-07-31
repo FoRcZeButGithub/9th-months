@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You've Got a Letter!</title>
+    <style>
+        /* --- ส่วนของการตั้งค่าพื้นฐาน --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Mitr', sans-serif;
+            overflow: hidden;
+            transition: background-color 1.5s ease;
+        }
+
+        /* --- หน้าซองจดหมาย --- */
+        #letter-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fde2e4;
+            z-index: 200;
+            transition: opacity 1s 0.5s ease-out;
+        }
+
+        .envelope {
+            position: relative;
+            cursor: pointer;
+            width: 300px;
+            height: 200px;
+            background-color: #ffc2d1;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            animation: pickUpEnvelope 3s ease-out forwards;
+        }
+        
+        @keyframes pickUpEnvelope {
+            0% { transform: translateY(150px); opacity: 0; }
+            70% { transform: translateY(-10px); opacity: 1; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .envelope:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fbafc3;
+            clip-path: polygon(0% 0%, 100% 0%, 50% 50%);
+            border-radius: 10px 10px 0 0;
+        }
+
+        .heart {
+            position: absolute;
+            font-size: 40px;
+            color: #ff8fab;
+            top: 45%;
+        }
+        
+        .open-text {
+            color: #ad536d;
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 100px;
+        }
+
+        #letter-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* --- เนื้อหาหลัก --- */
+        #main-content {
+            display: none;
+            width: 100%;
+            height: 100%;
+        }
+        
+        body.gallery-active {
+            background-color: #e9e0ff;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="20" height="20"><path d="M50,90 C-20,40 20,10 50,40 C80,10 120,40 50,90 Z" fill="%23f9c5e2" /></svg>');
+            background-size: 35px 35px;
+        }
+
+        /* (โค้ด CSS เดิม) */
+        .text-overlay{display:flex;justify-content:center;align-items:center;width:100%;height:100%;position:relative;z-index:100}.text-box{background-color:rgba(255,255,255,.9);padding:30px 40px;border-radius:20px;box-shadow:0 8px 25px rgba(0,0,0,.15);max-width:500px;text-align:center;border:2px solid #fff;animation:pulse 3s infinite ease-in-out}@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}h1{font-size:2.2em;color:#8c4a7c;margin-bottom:15px}p{font-size:1.1em;color:#555;line-height:1.7}.card-set{position:absolute;width:100%;height:100%;top:0;left:0;opacity:0;transition:opacity 1.5s ease-in-out;pointer-events:none}.card-set.active{opacity:1;pointer-events:auto}.photo-card{position:absolute;background-size:cover;background-position:center;padding:10px;background-color:#fff;border-radius:8px;box-shadow:5px 5px 15px rgba(0,0,0,.2);animation:float 15s infinite ease-in-out}.photo-card:hover{transform:scale(1.15) !important;z-index:50;box-shadow:10px 10px 30px rgba(0,0,0,.3);animation-play-state:paused}@keyframes float{0%{transform:translateY(0) rotate(var(--rotation-start))}50%{transform:translateY(-15px) rotate(var(--rotation-end))}100%{transform:translateY(0) rotate(var(--rotation-start))}}
+        
+        
+        /* === (ส่วนที่เพิ่มเข้ามาใหม่) สไตล์ของป้ายหมายเลขบนรูปภาพ === */
+        .photo-card::before {
+            content: attr(data-card-number); /* ดึงเลขมาจาก attribute */
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 28px;
+            height: 28px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        /* === (ส่วนสำคัญ) ตำแหน่งและขนาดของรูปแต่ละใบ === */
+        /* ชุดที่ 1 */
+        #card-1 { width: 300px; height: 210px; top: 5%; left: 8%; --rotation-start: -10deg; --rotation-end: -15deg; animation-duration: 16s; }
+        #card-2 { width: 220px; height: 180px; top: 20%; right: 12%; --rotation-start: 10deg; --rotation-end: 15deg; animation-duration: 14s; animation-delay: -5s; }
+        #card-3 { width: 250px; height: 200px; bottom: 25%; left: 10%; --rotation-start: 8deg; --rotation-end: 3deg; animation-duration: 17s; animation-delay: -2s; }
+        #card-4 { width: 150px; height: 200px; bottom: 15%; right: 18%; --rotation-start: -10deg; --rotation-end: -15deg; animation-duration: 15s; animation-delay: -8s; }
+        #card-5 { width: 250px; height: 160px; top: 75%; left: 5%; --rotation-start: 20deg; --rotation-end: 25deg; animation-duration: 18s; animation-delay: -10s; }
+        #card-6 { width: 140px; height: 180px; top: 60%; right: 5%; --rotation-start: -5deg; --rotation-end: 0deg; animation-duration: 13s; animation-delay: -3s; }
+        
+        /* ชุดที่ 2 */
+        #card-7 { width: 220px; height: 200px; top: 10%; left: 25%; --rotation-start: 12deg; --rotation-end: 18deg; animation-duration: 15s; animation-delay: -1s; }
+        #card-8 { width: 190px; height: 240px; top: 40%; right: 5%; --rotation-start: -8deg; --rotation-end: -12deg; animation-duration: 17s; animation-delay: -6s; }
+        #card-9 { width: 160px; height: 160px; bottom: 5%; left: 10%; --rotation-start: -15deg; --rotation-end: -10deg; animation-duration: 13s; animation-delay: -9s; }
+        #card-10 { width: 200px; height: 200px; bottom: 5%; right: 15%; --rotation-start: 18deg; --rotation-end: 12deg; animation-duration: 16s; animation-delay: -4s; }
+        #card-11 { width: 150px; height: 200px; top: 10%; right: 20%; --rotation-start: 5deg; --rotation-end: 0deg; animation-duration: 18s; animation-delay: -12s; }
+        #card-12 { width: 170px; height: 220px; bottom: 30%; left: 15%; --rotation-start: -5deg; --rotation-end: -10deg; animation-duration: 14s; animation-delay: -7s; }
+
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="letter-container">
+        <div class="envelope" id="open-button">
+            <div class="heart">💌</div>
+            <div class="open-text">คลิกเพื่อเปิด</div>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <div class="card-set active" id="set1">
+            <div class="photo-card" id="card-1" style="background-image: url('https://i.postimg.cc/L4J7WDSn/3caadbfb-0777-41d2-8be8-fc628b114d14.jpg');" data-card-number="1"></div>
+            <div class="photo-card" id="card-2" style="background-image: url('https://i.postimg.cc/fRvPpR72/e4a77aa3-b8fa-484d-967b-1b20f488adbe.jpg');" data-card-number="2"></div>
+            <div class="photo-card" id="card-3" style="background-image: url('https://i.postimg.cc/RhcdtgXs/adf59673-11ae-44af-87b7-4280e5baa6fe.jpg');" data-card-number="3"></div>
+            <div class="photo-card" id="card-4" style="background-image: url('https://i.postimg.cc/Hsz4CcKy/7cd8c9c7-347f-4892-a810-5d16eaf9fae1.jpg');" data-card-number="4"></div>
+            <div class="photo-card" id="card-5" style="background-image: url('https://i.postimg.cc/cCmYZ2DS/09df2848-5daa-44d2-8e9c-42e288ca640c.jpg');" data-card-number="5"></div>
+            <div class="photo-card" id="card-6" style="background-image: url('https://i.postimg.cc/QNbWBLbL/0687e540-513f-4fa8-94b3-653c54608729.jpg');" data-card-number="6"></div>
+        </div>
+        <div class="card-set" id="set2">
+            <div class="photo-card" id="card-7" style="background-image: url('https://i.postimg.cc/2ytjY78C/51856631-e2a4-4142-b0ac-d637b5cc3591.jpg');" data-card-number="7"></div>
+            <div class="photo-card" id="card-8" style="background-image: url('https://i.postimg.cc/1XKZ2Y0G/fc2d1306-bd50-4578-8290-20a7b1c5f449.jpg');" data-card-number="8"></div>
+            <div class="photo-card" id="card-9" style="background-image: url('https://i.postimg.cc/XJqtw6C2/1dac9b2c-634c-4fa7-b3bc-2c760cdb0976.jpg');" data-card-number="9"></div>
+            <div class="photo-card" id="card-10" style="background-image: url('https://i.postimg.cc/5N89H81X/e81722e2-e8ef-4199-a435-37d6c115685c.jpg');" data-card-number="10"></div>
+            <div class="photo-card" id="card-11" style="background-image: url('https://i.postimg.cc/ZYd4g6Ww/88d6fd34-4bf8-447b-9b79-200dde3602bb.jpg');" data-card-number="11"></div>
+            <div class="photo-card" id="card-12" style="background-image: url('https://i.postimg.cc/W14KRP9s/09aa6db5-a546-4e14-8491-673d2002abe6.jpg');" data-card-number="12"></div>
+        </div>
+        <div class="text-overlay">
+            <div class="text-box">
+                <h1>Happy our 9th months anniversary</h1>
+                <p>
+                    สุขสันต์วันครบรอบ 9 เดือน นะคะ<br>
+                    ดีใจมาก ๆ เลยที่ได้มาเป็นแฟนวาถึง 9 เดือน <br>
+                    เดือนที่ผ่านมานี้มีทั้งเรื่องดีและร้ายเกิดขึ้น <br>
+                    แต่เธอก็อยู่กับเค้าได้ จนถึงตอนนี้เค้าดีใจมากเลยค่ะ <br>
+                    อยากจะให้คำมั่นสัญญาว่าต่อจากนี้ ฟอร์ดจะทำให้ดีขึ้น <br>
+                    จะทำให้วาเห็นให้ได้เลยค่ะ ว่าฟอร์ดรักวาจริง ๆ <br>
+                    ฉะนั้นมาจับมือไปด้วยกันกับฟอร์ดนะคะ <br> 
+                    เราทั้งคู่โตขึ้นมาก ๆ ในเดือนก่อนหน้า <br>
+                    ฟอร์ดเองอยากจะรักวาและใส่ใจในตัววามากกว่านี้ค่ะ <br>
+                    จะไม่ทำให้เธอผิดหวังกับโอกาสให้มาแน่นอนค่ะ <br>
+                    จากนี้ขอให้เรามีความสุขกันทั้งคู่และไปเที่ยวด่วยกันอีกเยอะ ๆ เลยนะ
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const letterContainer = document.getElementById('letter-container');
+        const openButton = document.getElementById('open-button');
+        const mainContent = document.getElementById('main-content');
+        let isLetterOpened = false;
+
+        openButton.addEventListener('click', () => {
+            if (isLetterOpened) return;
+            isLetterOpened = true;
+
+            letterContainer.classList.add('hidden');
+            document.body.classList.add('gallery-active');
+            mainContent.style.display = 'block';
+            startPhotoSwitcher();
+        });
+
+        function startPhotoSwitcher() {
+            const set1 = document.getElementById('set1');
+            const set2 = document.getElementById('set2');
+            let currentSet = 1;
+
+            function showSet(setNumber) {
+                if (setNumber === 1) {
+                    set1.classList.add('active');
+                    set2.classList.remove('active');
+                } else {
+                    set1.classList.remove('active');
+                    set2.classList.add('active');
+                }
+            }
+            
+            const switchInterval = 5000;
+
+            setInterval(() => {
+                currentSet = currentSet === 1 ? 2 : 1;
+                showSet(currentSet);
+            }, switchInterval);
+        }
+    </script>
+</body>
+</html>
